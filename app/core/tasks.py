@@ -14,8 +14,7 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def log_sync_operation(
-    db: AsyncSession,
+async def log_sync_operation(
     operation_type: str,
     source_platform: str,
     status: str,
@@ -24,10 +23,9 @@ def log_sync_operation(
     error_message: str = None,
 ) -> None:
     """
-    Log a sync operation to the database.
+    Log a sync operation to the database (async version).
 
     Args:
-        db: Database session
         operation_type: Type of operation
         source_platform: Source platform
         status: Operation status
@@ -35,27 +33,18 @@ def log_sync_operation(
         conversation_id: Optional conversation ID
         error_message: Optional error message
     """
-    async def _log():
-        async with AsyncSessionLocal() as session:
-            sync_log = SyncLog(
-                operation_type=operation_type,
-                source_platform=source_platform,
-                target_platform="ringcentral" if source_platform == "livechat" else "livechat",
-                status=status,
-                agent_id=agent_id,
-                conversation_id=conversation_id,
-                error_message=error_message,
-            )
-            session.add(sync_log)
-            await session.commit()
-
-    # Create new event loop for this thread (Celery worker thread)
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(_log())
-    finally:
-        loop.close()
+    async with AsyncSessionLocal() as session:
+        sync_log = SyncLog(
+            operation_type=operation_type,
+            source_platform=source_platform,
+            target_platform="ringcentral" if source_platform == "livechat" else "livechat",
+            status=status,
+            agent_id=agent_id,
+            conversation_id=conversation_id,
+            error_message=error_message,
+        )
+        session.add(sync_log)
+        await session.commit()
 
 
 @celery_app.task(name="process_livechat_chat_started")
@@ -92,8 +81,8 @@ def process_livechat_chat_started(
                 agent = await agent_manager.get_agent_by_livechat_id(agent_id)
                 if not agent:
                     logger.error("agent_not_found_for_livechat_id", livechat_agent_id=agent_id)
-                    log_sync_operation(
-                        db, "chat_started", "livechat", "failed",
+                    await log_sync_operation(
+                        "chat_started", "livechat", "failed",
                         error_message=f"Agent not found: {agent_id}"
                     )
                     return {"status": "error", "message": "Agent not found"}
@@ -118,8 +107,8 @@ def process_livechat_chat_started(
                 )
 
                 # Log success
-                log_sync_operation(
-                    db, "chat_started", "livechat", "success",
+                await log_sync_operation(
+                    "chat_started", "livechat", "success",
                     agent_id=agent.id, conversation_id=conversation.id
                 )
 
@@ -132,13 +121,19 @@ def process_livechat_chat_started(
 
             except Exception as e:
                 logger.error("failed_to_process_chat_started", error=str(e))
-                log_sync_operation(
-                    db, "chat_started", "livechat", "failed",
+                await log_sync_operation(
+                    "chat_started", "livechat", "failed",
                     error_message=str(e)
                 )
                 return {"status": "error", "message": str(e)}
 
-    return asyncio.run(_process())
+    # Create new event loop for this Celery worker thread
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(_process())
+    finally:
+        loop.close()
 
 
 @celery_app.task(name="process_livechat_chat_ended")
@@ -188,8 +183,8 @@ def process_livechat_chat_ended(chat_id: str, agent_id: str) -> Dict[str, Any]:
                     # Set agent available if no other active conversations
                     await agent_manager.set_agent_available(agent.id)
 
-                    log_sync_operation(
-                        db, "chat_ended", "livechat", "success",
+                    await log_sync_operation(
+                        "chat_ended", "livechat", "success",
                         agent_id=agent.id, conversation_id=conversation.id
                     )
                 else:
@@ -204,13 +199,19 @@ def process_livechat_chat_ended(chat_id: str, agent_id: str) -> Dict[str, Any]:
 
             except Exception as e:
                 logger.error("failed_to_process_chat_ended", error=str(e))
-                log_sync_operation(
-                    db, "chat_ended", "livechat", "failed",
+                await log_sync_operation(
+                    "chat_ended", "livechat", "failed",
                     error_message=str(e)
                 )
                 return {"status": "error", "message": str(e)}
 
-    return asyncio.run(_process())
+    # Create new event loop for this Celery worker thread
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(_process())
+    finally:
+        loop.close()
 
 
 @celery_app.task(name="process_ringcentral_call_started")
@@ -262,8 +263,8 @@ def process_ringcentral_call_started(
                     call_status="Connected",
                 )
 
-                log_sync_operation(
-                    db, "call_started", "ringcentral", "success",
+                await log_sync_operation(
+                    "call_started", "ringcentral", "success",
                     agent_id=agent.id, conversation_id=conversation.id
                 )
 
@@ -276,13 +277,19 @@ def process_ringcentral_call_started(
 
             except Exception as e:
                 logger.error("failed_to_process_call_started", error=str(e))
-                log_sync_operation(
-                    db, "call_started", "ringcentral", "failed",
+                await log_sync_operation(
+                    "call_started", "ringcentral", "failed",
                     error_message=str(e)
                 )
                 return {"status": "error", "message": str(e)}
 
-    return asyncio.run(_process())
+    # Create new event loop for this Celery worker thread
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(_process())
+    finally:
+        loop.close()
 
 
 @celery_app.task(name="process_ringcentral_call_ended")
@@ -332,8 +339,8 @@ def process_ringcentral_call_ended(session_id: str, extension_id: str) -> Dict[s
                     # Set agent available if no other active conversations
                     await agent_manager.set_agent_available(agent.id)
 
-                    log_sync_operation(
-                        db, "call_ended", "ringcentral", "success",
+                    await log_sync_operation(
+                        "call_ended", "ringcentral", "success",
                         agent_id=agent.id, conversation_id=conversation.id
                     )
                 else:
@@ -348,10 +355,16 @@ def process_ringcentral_call_ended(session_id: str, extension_id: str) -> Dict[s
 
             except Exception as e:
                 logger.error("failed_to_process_call_ended", error=str(e))
-                log_sync_operation(
-                    db, "call_ended", "ringcentral", "failed",
+                await log_sync_operation(
+                    "call_ended", "ringcentral", "failed",
                     error_message=str(e)
                 )
                 return {"status": "error", "message": str(e)}
 
-    return asyncio.run(_process())
+    # Create new event loop for this Celery worker thread
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(_process())
+    finally:
+        loop.close()
