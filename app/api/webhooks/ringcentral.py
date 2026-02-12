@@ -45,7 +45,7 @@ async def ringcentral_telephony_session(
     body_bytes = await request.body()
     payload = await request.json()
 
-    logger.info("ringcentral_telephony_webhook_received", event=payload.get("event"))
+    logger.info("ringcentral_telephony_webhook_received", event_type=payload.get("event"))
 
     # Handle validation token (webhook setup)
     validation_token = handle_validation_token(payload)
@@ -125,7 +125,7 @@ async def ringcentral_telephony_session(
 
     logger.info(
         "ringcentral_telephony_event_parsed",
-        event=event,
+        event_type=event,
         session_id=session_id,
         extension_id=extension_id,
         party_status=party_status,

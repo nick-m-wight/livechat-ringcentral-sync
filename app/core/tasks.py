@@ -49,7 +49,13 @@ def log_sync_operation(
             session.add(sync_log)
             await session.commit()
 
-    asyncio.run(_log())
+    # Create new event loop for this thread (Celery worker thread)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(_log())
+    finally:
+        loop.close()
 
 
 @celery_app.task(name="process_livechat_chat_started")
