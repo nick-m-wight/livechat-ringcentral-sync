@@ -1,9 +1,13 @@
 [tool.poetry]
 name = "livechat-ringcentral-sync"
 version = "0.1.0"
-description = "Bidirectional synchronization system between LiveChat and RingCentral"
-authors = ["Your Name <you@example.com>"]
+description = "Bidirectional synchronization system between LiveChat and RingCentral with real-time agent status and conversation tracking"
+authors = ["LiveChat-RingCentral Sync Contributors"]
 readme = "README.md"
+license = "MIT"
+homepage = "https://github.com/yourusername/livechat-ringcentral-sync"
+repository = "https://github.com/yourusername/livechat-ringcentral-sync"
+keywords = ["livechat", "ringcentral", "sync", "webhooks", "fastapi", "celery"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
