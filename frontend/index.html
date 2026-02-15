@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiveChat-RingCentral Sync Dashboard</title>
+    <link rel="stylesheet" href="/demo/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>LiveChat-RingCentral Sync</h1>
+            <p class="subtitle">Agent Status & Conversation Tracking Dashboard</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="agents">Agents</button>
+            <button class="tab-button" data-tab="conversations">Conversations</button>
+            <button class="tab-button" data-tab="stats">Stats</button>
+        </nav>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading hidden">Loading...</div>
+
+        <!-- Error Message -->
+        <div id="error" class="error hidden"></div>
+
+        <!-- Tab Content -->
+        <main class="content">
+            <!-- Agents Tab -->
+            <div id="agents-tab" class="tab-content active">
+                <div class="tab-header">
+                    <h2>Agent Status</h2>
+                    <button id="refresh-agents" class="btn-refresh">Refresh</button>
+                </div>
+                <div id="agents-list" class="agents-grid">
+                    <!-- Agent cards will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Conversations Tab -->
+            <div id="conversations-tab" class="tab-content hidden">
+                <div class="tab-header">
+                    <h2>Recent Conversations</h2>
+                    <div class="filters">
+                        <select id="conv-status-filter" class="filter-select">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="ended">Ended</option>
+                        </select>
+                        <select id="conv-type-filter" class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="chat">Chat</option>
+                            <option value="call">Call</option>
+                        </select>
+                        <button id="refresh-conversations" class="btn-refresh">Refresh</button>
+                    </div>
+                </div>
+                <div id="conversations-list" class="table-container">
+                    <!-- Conversations table will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Stats Tab -->
+            <div id="stats-tab" class="tab-content hidden">
+                <div class="tab-header">
+                    <h2>System Statistics</h2>
+                    <button id="refresh-stats" class="btn-refresh">Refresh</button>
+                </div>
+                <div id="stats-display" class="stats-grid">
+                    <!-- Stats cards will be inserted here -->
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Auto-refresh: <span id="auto-refresh-status">Enabled (10s)</span></p>
+            <p class="last-update">Last updated: <span id="last-update-time">Never</span></p>
+        </footer>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <script type="module" src="/demo/js/api.js"></script>
+    <script type="module" src="/demo/js/utils.js"></script>
+    <script type="module" src="/demo/js/agents.js"></script>
+    <script type="module" src="/demo/js/conversations.js"></script>
+    <script type="module" src="/demo/js/demo.js"></script>
+    <script type="module" src="/demo/js/app.js"></script>
+</body>
+</html>
